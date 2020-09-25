@@ -1,3 +1,3 @@
 # Mulitplayer
 
-Mini Jeu avec Socket.IO et Express
+Mini jeu avec Socket.IO et Express
