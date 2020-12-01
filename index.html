@@ -1,0 +1,240 @@
+<meta charset="utf-8">
+
+<style type="text/css">
+	
+	body {
+
+		font-family: sans-serif;
+	}
+
+	ul {
+		
+		margin: 0;
+	}
+
+	.row {
+
+		display: flex;
+		justify-content: center;
+		padding: 0;
+	}
+
+	.square {
+
+		align-items: center;
+		display: flex;
+		color: white;
+		background: black;
+		font-size: 11px;
+		height: 47px;
+		width: 47px;
+		font-weight: 700;
+		justify-content: center;
+		cursor: pointer;
+	}
+
+	.red {
+
+		background : red;
+	}
+
+	.color {
+
+		opacity: 0;
+		padding: 10px;
+	    margin-left: 4px;
+	    transition: .5s
+	    
+	}
+
+	span {
+
+		margin-left: 4px;
+	}
+
+</style>
+
+<div style="display:flex;">
+<button style="" onclick="list_of_player()">Liste des joueurs</button><span id="id"></span><div id="color" class="color"></div>
+</div>
+
+<p id="texte"></p>
+
+<div id="game"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script type="text/javascript">
+	
+	// localStorage.clear()
+
+	joueurs = {}
+
+	color_player = ""
+	
+	try {
+
+		var socket = io.connect(window.location.href)
+
+		function list_of_player(){
+
+			socket.emit('list_of_player')
+		}
+
+		function new_player(color_id,player_position){
+
+			let color = "a"+color_id.slice(1)
+
+			let style = document.createElement('style')
+			style.type = 'text/css'
+			style.innerHTML = `.${color} { background: ${color_id}; }`
+			document.getElementsByTagName('head')[0].appendChild(style)
+
+			document.getElementById("sq-" + player_position.x + "-" + player_position.y ).classList.add(color)
+
+		}
+
+		socket.on("list_of_player_results", (data) => { console.log(data) })
+
+	}catch(e){}
+
+	dx = 15
+
+	function render(size){
+
+		size = size+1
+
+		content = "<div id='container'>"
+		nsquare = 1
+
+		for ( y = 1; y < size; y++ ){
+
+			content += `<ul class="row" id="row-${y}">`
+
+			for ( x = 1 ; x < size; x++ ){
+
+				content += `<li class="square" id="sq-${x}-${y}">${nsquare}<\/li>`
+			  	
+			  	nsquare++
+			}
+
+			content += `<\/ul>`
+
+		}
+		content += '</div>'
+		document.getElementById("game").innerHTML += content
+
+	}
+
+	render(dx)
+
+	// Send size grid
+
+	try { socket.emit( 'size', dx ) }catch(e){}
+
+	// Set color
+
+	try {
+
+		socket.on("nouveau_joueur", (data) => {
+
+			// Premier connexion
+
+				if(color_player == ""){
+
+					color_player = data.color
+
+					document.getElementById("id").innerHTML           = data.color
+					document.getElementById("color").style.opacity    = 1
+					document.getElementById("color").style.background = data.color
+
+				}
+
+			// Nouveau joueur
+
+				joueurs[data.color] = data
+
+			// Afficher tous les joueurs sur la grille
+
+				console.log(data.player)
+
+				all_player = data.player
+
+				for( index in all_player )
+				new_player(index,all_player[index])
+				console.log(index,all_player[index])
+		})
+
+	}catch(e){}
+
+	function move(p,player_position,color,multi) {
+
+		let style_color = color.replace("#","a")
+
+		try {
+
+			document.getElementById("sq-" + p.x + "-" + p.y ).classList.toggle(style_color)
+
+			document.getElementById("sq-" + player_position.x + "-" + player_position.y ).classList.toggle(style_color)
+
+		} catch (error) {
+
+			document.getElementById("sq-" + p.x + "-" + p.y ).classList.add(style_color)
+			
+			joueurs[color_player].position = p
+			player_position = p
+
+		}
+
+		if( multi ){
+
+			try { socket.emit( 'move', {last_position:p,position:player_position,color:color} ) }catch(e){}
+
+		}
+	}
+
+	// move other player
+
+	try {
+
+		socket.on("move_player", (data) => {
+
+			move(data.last_position,data.position,data.color,false)
+			
+		})
+
+	}catch (error) {}
+
+	document.addEventListener("keypress", function (event) {
+
+		// let color           = localStorage.getItem("color")
+		// let player_position = JSON.parse( localStorage.getItem("position") )
+		// let p               = Object.assign({},player_position)
+
+		let color           = color_player
+		let player_position = joueurs[color_player].position
+		let p               = Object.assign({},joueurs[color_player].position)
+
+		switch (String.fromCharCode(event.keyCode).toUpperCase()) {
+
+			case "Z":
+				joueurs[color_player].position.y -= 1
+				move(p,player_position,color,true)
+				break
+			case "S":
+	   		 	joueurs[color_player].position.y += 1
+				move(p,player_position,color,true)
+				break
+			case "Q":
+				joueurs[color_player].position.x -= 1
+				move(p,player_position,color,true)
+				break
+			case "D":
+				joueurs[color_player].position.x += 1
+				move(p,player_position,color,true)
+				break
+
+		}
+	})
+
+</script>
