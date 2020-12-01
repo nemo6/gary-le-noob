@@ -1,9 +1,9 @@
 var fs             = require('fs')
-var express        = require('C:/Users/MIGUEL/AppData/Roaming/npm/node_modules/express'); // '/usr/local/lib/node_modules/express/' sur Linux
-var expressSession = require('C:/Users/MIGUEL/AppData/Roaming/npm/node_modules/express-session') // '/usr/local/lib/node_modules/express-session/' sur Linux
+var express        = require('C:/Users/MIGUEL/AppData/Roaming/npm/node_modules/express'); // '/usr/local/lib/node_modules/express/' sur Linux avec un npm i global
+var expressSession = require('C:/Users/MIGUEL/AppData/Roaming/npm/node_modules/express-session') // '/usr/local/lib/node_modules/express-session/'
 var app            = express();
 var server         = require('http').createServer(app);
-var io             = require('C:/Users/MIGUEL/AppData/Roaming/npm/node_modules/socket.io')(server); // '/usr/local/lib/node_modules/socket.io/' sur Linux
+var io             = require('C:/Users/MIGUEL/AppData/Roaming/npm/node_modules/socket.io')(server); // '/usr/local/lib/node_modules/socket.io/'
 var port           = 8080
 
 app.use(expressSession({
